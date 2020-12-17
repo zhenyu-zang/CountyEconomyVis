@@ -9,7 +9,7 @@ function map_main(OM) {
                       .scale(360)
                       .translate(translate);
   var path = d3.geoPath().projection(projection);
-  var url = "/data/100000_full.json";
+  var url = "data/100000_full.json";
 
   d3.json(url).then(geojson =>{
     svg.selectAll("path")
