@@ -120,8 +120,8 @@ function happy_index_main(OM) {
 		.attr('id', 'happy_index')
 		.attr('style', 'width:100%;height:100%;');
 		flush_radar_map();
-		OM.subscribe('key_update', key_update);
-		OM.subscribe('year_update', year_update);
+		OM.subscribe('key_update', happy_index_key_update);
+		OM.subscribe('year_update', happy_index_year_update);
 	});
 }
  
