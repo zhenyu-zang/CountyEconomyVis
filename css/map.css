@@ -1,0 +1,26 @@
+path.region {
+    fill:beige;
+    stroke:black;
+    stroke-width: .2px;
+}
+
+path.region:hover {
+    fill: red;
+}
+
+path.province {
+
+}
+
+.tooltip {
+    background-color: black;
+    border: none;
+    border-radius: 5px;
+    padding: 15px;
+    min-width: 100px;
+    text-align: left;
+    color: white;
+    position: absolute;
+    user-select: none;
+    pointer-events: none;
+}

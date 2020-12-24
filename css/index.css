@@ -31,13 +31,3 @@ svg {
     height: 100%;
     width: 100%;
 }
-
-path {
-    fill:beige;
-    stroke:black;
-    stroke-width: .2px;
-}
-  
-path:hover {
-  fill: red;
-}
