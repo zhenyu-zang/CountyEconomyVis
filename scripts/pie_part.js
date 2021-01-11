@@ -5,69 +5,109 @@ let select_year='1997';
 
 function draw_pie(div_id, keys, data_map) {
 	var myChart = echarts.init(document.getElementById(div_id));
-	selected = [];
-	titles = [{text: String(select_year)+'年'+'产业分布图',left: '50%',textAlign: 'center'}];
+	selected = [{
+            name: '第一产业',
+            type: 'bar',
+			stack: 'all',
+            data: []
+        },
+		{
+            name: '第二产业',
+            type: 'bar',
+			stack: 'all',
+            data: []
+        },
+		{
+            name: '第三产业',
+            type: 'bar',
+			stack: 'all',
+            data: []
+        }
+	];
 	width = 90/keys.length;
 	if (keys.length==1) rad = 45;
-	else rad = width
+	else rad = width;
+	sum_map = {};
+	xa = [
+        {
+            type: 'category',
+            data: []
+        }
+	];
 	for (key_id=0; key_id<keys.length; key_id++) {
-		tmp = [];
 		key = keys[key_id];
 		data = data_map[key][String(select_year)];
-		if (data.hasOwnProperty('第一产业增加值(亿元)')) {
+		if (data.hasOwnProperty('第一产业增加值(亿元)') && data['第一产业增加值(亿元)']!="") {
 			first = parseFloat(data['第一产业增加值(亿元)']);
 		}
 		else first = 0;
-		if (data.hasOwnProperty('第二产业增加值(亿元)')) {
+		if (data.hasOwnProperty('第二产业增加值(亿元)') && data['第二产业增加值(亿元)']!="") {
 			second = parseFloat(data['第二产业增加值(亿元)']);
 		}
 		else second = 0;
-		if (data.hasOwnProperty('GDP(亿元)')) {
+		if (data.hasOwnProperty('GDP(亿元)') && data['GDP(亿元)']!="") {
 			third = parseFloat(data['GDP(亿元)'])-first-second;
 			third = parseInt(third*100)/100;
 		}
 		else third = 0;
-		tmp.push({'value':first, name: '第一产业'})
-		tmp.push({'value':second, name: '第二产业'})
-		tmp.push({'value':third, name: '第三产业'})
-		selected[key_id] = {
-			name: data['省份']+'\t'+key,
-			type: 'pie',
-			radius: String(rad)+'%',
-			center: [String((key_id+0.5)*width+10)+'%', '50%'],
-			label: {
-				position: 'inner',
-				show: false
-			},
-			labelLine: {
-				show: false
-			},
-			data: tmp,
-			left: String(key_id*width+10)+'%',
-			right: String((keys.length-key_id-1)*width)+'%',
-			top: 0,
-			bottom: 0
+		sum=first+second+third;
+		if (sum<1e-8) {
+			sum=1e-8;
+			first=sum/3;
+			second=sum/3;
+			third=sum/3;
 		}
-		titles.push({
-        subtext: data['省份']+'\t'+key,
-        left: String((key_id+0.5)*width+10)+'%',
-        top: '75%',
-        textAlign: 'center',
-		subtextStyle: {color: 'black'}
-		});
+		console.log(first, second, third, sum);
+		sum_map[key]=sum;
+		selected[0].data.push(first/sum);
+		selected[1].data.push(second/sum);
+		selected[2].data.push(third/sum);
+		xa[0].data.push(key);
 	}
 	var option = {
-            title: titles,
+			title : {
+				show:true, 
+				text: '产业分布图',
+				left: '50%',textAlign: 'center'
+			},
             tooltip: {
-				trigger: 'item',
-				formatter: '{a} <br/>{b}: {c} ({d}%)'
+				trigger: 'axis',
+				formatter: function(params) {
+					key = params[0].name;
+					data = data_map[key][String(select_year)];
+					prov = data['省份'];
+					ret = prov+'\t'+key;
+					for (idx=0;idx<params.length;idx++) {
+						part=params[idx].seriesName;
+						ratio = params[idx].value;
+						real = ratio*sum_map[key];
+						ratio = Math.round(ratio*10000)/100;
+						real = Math.round(real*100)/100;
+						ret = ret + '<br/>' + part + ': '+ String(real) + '亿元\t('+String(ratio)+'%)';
+					}
+					return ret;
+				}
 			},
             legend: {
-				orient: 'vertical',
-				top: '40%',
-				left: 10,
-                data:['第一产业', '第二产业', '第三产业']
+                data:['第一产业', '第二产业', '第三产业'],
+				top: '10%',
+				left: 'center'
             },
+			grid: {
+				left: '3%',
+				right: '4%',
+				bottom: '3%',
+				top: '20%',
+				containLabel: true
+			},
+			xAxis: xa,
+			yAxis: [
+				{
+					type: 'value',
+					min:0,
+					max:1
+				}
+			],
             series: selected
         };
 	myChart.clear();
