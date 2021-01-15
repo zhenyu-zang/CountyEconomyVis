@@ -44,6 +44,28 @@ function append_textarea(div) {
     OM.subscribe('changed', text_callback);
 }
 
+function append_selected(div) {
+    // Add "select" subscriber
+    let text = div.append('textarea').text('Select: None');
+
+    function select_callback(adcode) {
+        text.text(`Select: ${adcode}`);
+    }
+    OM.subscribe('select', select_callback);
+
+    // Add "selected" subscriber
+    let table = div.append('table');
+
+    function selected_callback(selected) {
+        table.selectAll("tr")
+            .data(selected)
+            .join("tr")
+            .text(adcode => adcode);
+    }
+
+    OM.subscribe('selected', selected_callback);
+}
+
 function example1(OM) {
     let div = d3.select('#example1');
     append_button(div);
@@ -56,6 +78,8 @@ function example2(OM) {
     append_input(div);
     div.append("br");
     append_button(div);
+    div.append("br");
+    append_selected(div);
 }
 
 function example3(OM) {
