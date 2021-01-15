@@ -75,9 +75,9 @@ function example1(OM) {
 
 function example2(OM) {
     let div = d3.select('#example2');
-    append_input(div);
-    div.append("br");
-    append_button(div);
+    // append_input(div);
+    // div.append("br");
+    // append_button(div);
     div.append("br");
     append_selected(div);
 }

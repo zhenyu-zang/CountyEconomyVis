@@ -35,7 +35,7 @@ function debug_append_input(div) {
 }
 
 function debug(OM) {
-    let div = d3.select('#example1');
+    let div = d3.select('#example2');
     debug_append_button(div);
     div.append("br");
     debug_append_input(div);
