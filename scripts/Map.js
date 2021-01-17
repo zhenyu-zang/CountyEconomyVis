@@ -2,7 +2,8 @@ const __CONFIG__ = {
   main_id: "map_grid",
   tooltip_offset_x: 8,
   tooltip_offset_y: 8,
-  duration: 200
+  duration: 200,
+  tooltip_opacity: 0.8
 }
 
 function select_main(config=__CONFIG__) {
@@ -40,7 +41,7 @@ class MapState {
       .style("opacity", 0);
     // Add select table
     this.table = div.append("table")
-      .classed("select-table", true);
+      .classed("selected-counties", true);
 
     svg.on("click", this.handle_svg_click);
     svg.call(this.zoom);
@@ -130,10 +131,22 @@ class MapState {
   }
   
   update_selected = () => {
-    this.table.selectAll("tr")
-      .data(this.selected)
+    const data = this.selected.filter(adcode => adcode in this.adcode_with_data);
+    const entries = this.table.selectAll("tr")
+      .data(data)
       .join("tr")
-      .text(d => d);
+      .classed("selected-counties", true)
+      .text(adcode => "");  // Necessary
+    entries
+      .append("td")
+        .classed("selected-counties", true)
+        .text(adcode => this.adcode_with_data[adcode].区县);
+    entries
+      .append("td")
+        .classed("selected-counties", true)
+      .append("button")
+        .text("delete")
+        .on("click", (adcode) => this.handle_select(adcode));
   }
 
   handle_select = (adcode) => {
@@ -146,7 +159,9 @@ class MapState {
     this.update_selected();
     this.OM.publish("select", adcode);
     this.OM.publish("selected", this.selected);
-    OM.publish('key_update', this.adcodes2adnames(this.selected));
+    if (adcode in this.adcode_with_data) {
+      OM.publish('key_update', this.adcodes2adnames(this.selected));
+    }
   }
 
   render_map = (geojson) => {
@@ -189,7 +204,7 @@ class MapState {
           .html(properties2html(d.properties))  
           .transition()
           .duration(__CONFIG__.duration)
-          .style("opacity", 1)
+          .style("opacity", __CONFIG__.tooltip_opacity)
           .style("left", `${event.clientX + __CONFIG__.tooltip_offset_x}px`)
           .style("top", `${event.clientY + __CONFIG__.tooltip_offset_y}px`);
       })
