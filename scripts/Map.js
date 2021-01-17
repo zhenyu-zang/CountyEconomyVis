@@ -14,14 +14,15 @@ class MapState {
   adcode = "100000";
   selected = [];
   geojsons = {};
+  single_geojsons = {};
   parents = {};
   parent_set = new Set();
   center = [104, 32];
-  scale = 360
+  scale = 360;
   constructor(OM) {
     this.OM = OM;
     const div = select_main();
-    const svg = this.svg = div.append("svg");
+    const svg = this.svg = div.append("svg").classed("map", true);
     const rect = svg.node().getBoundingClientRect();
     this.translate = [rect.width/2, rect.height/2];
     this.projection = d3.geoMercator()
@@ -34,7 +35,14 @@ class MapState {
                   .on("start", this.handle_zoom_start)
                   .on("zoom", this.handle_zoom)
                   .on("end", this.handle_zoom_end);
-    this.g = svg.append("g");
+    
+    // Add groups
+    this.map_g = svg.append("g")
+        .classed("regions", true);
+    this.current_g = this.map_g.append("g")
+        .classed("current-regions", true);
+    this.selected_g = this.map_g.append("g")
+        .classed("selected-regions", true);
     // Add tooltip
     this.tooltip = div.append("div")
       .classed("tooltip", true)
@@ -43,7 +51,6 @@ class MapState {
     this.table = div.append("table")
       .classed("selected-counties", true);
 
-    svg.on("click", this.handle_svg_click);
     svg.call(this.zoom);
   }
 
@@ -87,9 +94,15 @@ class MapState {
     return Promise.all([csv, json]);
   }
 
+  // Filter valid adcode.
+  // All special cases should be defined here.
+  valid_adcode_filter = (adcode) => {
+    return adcode in this.adcode_with_data;
+  }
+
   adcodes2adnames = (adcodes) => {
     return adcodes
-      .filter(adcode => adcode in this.adcode_with_data)
+      .filter(this.valid_adcode_filter)
       .map(adcode => this.adcode_with_data[adcode].区县);
   }
 
@@ -99,7 +112,7 @@ class MapState {
 
   handle_zoom = () => {
     let transform = d3.event.transform;
-    this.g.attr("transform", transform);
+    this.map_g.attr("transform", transform);
   }
 
   handle_zoom_end = () => {
@@ -110,10 +123,6 @@ class MapState {
     else if (transform.k < 3 && this.adcode in this.parents) {
       this.render(this.parents[this.adcode]);
     }
-  }
-
-  handle_svg_click = () => {
-    // console.log("svg click");
   }
 
   get_geojson(adcode) {
@@ -129,9 +138,22 @@ class MapState {
         return geojson;
       });
   }
+
+  async get_single_geojson(adcode) {
+    if (adcode in this.single_geojsons)
+      return this.single_geojsons[adcode];
+
+    const geojson = await this.get_geojson();
+    for (let feature of geojson.features) {
+      if (feature.properties.adcode == adcode) {
+        this.single_geojsons[adcode] = feature;
+        return feature;
+      }
+    }
+  }
   
-  update_selected = () => {
-    const data = this.selected.filter(adcode => adcode in this.adcode_with_data);
+  update_selected_table = () => {
+    const data = this.selected.filter(this.valid_adcode_filter);
     const entries = this.table.selectAll("tr")
       .data(data)
       .join("tr")
@@ -149,34 +171,72 @@ class MapState {
         .on("click", (adcode) => this.handle_select(adcode));
   }
 
-  handle_select = (adcode) => {
+  handle_select = async (adcode) => {
     const i = this.selected.indexOf(adcode);
     if (i >= 0)
       this.selected.splice(i, 1);
     else
       this.selected.push(adcode);
 
-    this.update_selected();
+    await this.get_single_geojson(adcode);
+
+    this.update_selected_table();
+    this.update_map();
+
     this.OM.publish("select", adcode);
     this.OM.publish("selected", this.selected);
-    if (adcode in this.adcode_with_data) {
+    if (this.valid_adcode_filter(adcode)) {
       OM.publish('key_update', this.adcodes2adnames(this.selected));
     }
+  }
+
+  update_map = () => {
+    const path = d3.geoPath().projection(this.projection);
+    const data = this.selected
+      .filter(this.valid_adcode_filter)
+      .filter(adcode => {
+        if (adcode in this.parents) {   // Filter directed ancestor
+          adcode = this.parents[adcode];
+          if (adcode == this.adcode)
+            return false;
+        }
+        while(adcode in this.parents) { // Filter indirect ancestor
+          adcode = this.parents[adcode];
+          if (adcode == this.adcode)
+            return true;
+        }
+        return false;
+      })
+      .map(adcode => this.single_geojsons[adcode]);
+    this.selected_g
+      .selectAll("path.region")
+      .data(data)
+      .join("path")
+        .classed("region", true)
+        .attr("d", path);
+
+    this.current_g
+      .selectAll("path.region")
+        .classed("selected-region", d => {
+          const adcode = d.properties.adcode;
+          return this.selected.includes(adcode) && this.valid_adcode_filter(adcode);
+        });
   }
 
   render_map = (geojson) => {
     const projection = this.projection;
     const path = d3.geoPath().projection(projection);
-    this.g.selectAll("path.region")
+    this.current_g
+      .selectAll("path.region")
       .data(geojson.features)
       .join("path")
-      .classed("region", true)
-      .classed("province", true)
-      .attr("d", path)
-      .on("click", (d) => {
-        this.handle_select(d.properties.adcode);
-      });
+        .classed("region", true)
+        .attr("d", path)
+        .on("click", d => {
+          this.handle_select(d.properties.adcode);
+        });
 
+    this.update_map();
     return geojson;
   }
   
@@ -184,7 +244,7 @@ class MapState {
     const projection = this.projection;
     const data = geojson.features.filter(d => "center" in d.properties)
   
-    this.g.selectAll("circle")
+    this.map_g.selectAll("circle")
       .data(data)
       .enter()
       .append("circle")

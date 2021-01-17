@@ -2,18 +2,34 @@ div.grid {
     overflow: hidden;
 }
 
-path.region {
+g.regions {
+
+}
+
+g.current-regions {
     fill:beige;
     stroke:black;
     stroke-width: .02px;
+    z-index: 70;
+}
+
+g.selected-regions {
+    fill: burlywood;
+    stroke-width: 0px;
+    z-index: 80;
+    pointer-events: none;
+}
+
+path.region {
+
 }
 
 path.region:hover {
     fill: red;
 }
 
-path.province {
-
+path.selected-region {
+    fill: burlywood;
 }
 
 .tooltip {
@@ -27,6 +43,7 @@ path.province {
     position: absolute;
     user-select: none;
     pointer-events: none;
+    z-index: 100;
 }
 
 table.selected-counties {
@@ -35,6 +52,7 @@ table.selected-counties {
     top: 10px;
     background-color: darkgrey;
     border-collapse: collapse;
+    opacity: 0.7;
 }
 
 table, tr, th, td.selected-counties {
