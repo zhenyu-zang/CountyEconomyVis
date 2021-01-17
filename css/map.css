@@ -5,7 +5,7 @@ div#grid {
 path.region {
     fill:beige;
     stroke:black;
-    stroke-width: .2px;
+    stroke-width: .02px;
 }
 
 path.region:hover {

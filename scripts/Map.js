@@ -16,7 +16,7 @@ class MapState {
   parents = {};
   parent_set = new Set();
   center = [104, 32];
-  scale = 360;
+  scale = 360
   constructor(OM) {
     this.OM = OM;
     const div = select_main();
@@ -28,7 +28,7 @@ class MapState {
                         .scale(this.scale)
                         .translate(this.translate);
     this.zoom = d3.zoom()
-                  .translateExtent([[0, 0], [rect.width, rect.height]])
+                  .translateExtent([[-5, -5], [rect.width+5, rect.height+5]])
                   .scaleExtent([1, 32])
                   .on("start", this.handle_zoom_start)
                   .on("zoom", this.handle_zoom)
@@ -47,13 +47,49 @@ class MapState {
   }
 
   init() {
-    return d3.json('data/geojson/geojson.parents.json')
-      .then(json => {
-        this.parents = json;
-        for (let p of Object.values(json)) {
+    const csv = d3.csv('data/data.csv')
+      .then(data => {
+        data.splice(0,1);
+        // this.csv = data;
+        this.adcode_with_data = {};
+
+        const proc = (entry) => {
+          const adcode = entry.区县行政区划码;
+          const adname = entry.区县;
+          const year = entry.年份;
+          delete entry.省份;
+          delete entry.省行政区划码;
+          delete entry.城市代码;
+          delete entry.城市;
+          delete entry.区县行政区划码;
+          delete entry.区县;
+          delete entry.年份;
+          return [adcode, adname, year, entry];
+        }
+
+        for (let entry of data) {
+          let [adcode, adname, year, value] = proc(entry);
+          if (adcode == "")
+            continue;
+          if (!(adcode in this.adcode_with_data))
+            this.adcode_with_data[adcode] = {区县: adname};
+          this.adcode_with_data[adcode][year] = value;
+        }
+      });
+    const json = d3.json('data/geojson/geojson.parents.json')
+      .then(data => {
+        this.parents = data;
+        for (let p of Object.values(data)) {
           this.parent_set.add(p);
         }
       });
+    return Promise.all([csv, json]);
+  }
+
+  adcodes2adnames = (adcodes) => {
+    return adcodes
+      .filter(adcode => adcode in this.adcode_with_data)
+      .map(adcode => this.adcode_with_data[adcode].区县);
   }
 
   handle_zoom_start = () => {
@@ -110,6 +146,7 @@ class MapState {
     this.update_selected();
     this.OM.publish("select", adcode);
     this.OM.publish("selected", this.selected);
+    OM.publish('key_update', this.adcodes2adnames(this.selected));
   }
 
   render_map = (geojson) => {
@@ -199,9 +236,8 @@ function properties2html(properties) {
   return html;
 }
 
-function map_main(OM) {
+async function map_main(OM) {
   const state = new MapState(OM);
-  state.init().then(
-    () => state.render(state.adcode)
-  );
+  await state.init();
+  state.render(state.adcode);
 }
