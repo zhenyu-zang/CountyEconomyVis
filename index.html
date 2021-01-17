@@ -17,22 +17,25 @@
 <body>
     <div class="container">
         <div id='map_grid' class="grid"></div>
-        <div id='example2' class="grid"></div>
+        <!-- <div id='example2' class="grid"></div> -->
         <div id='happy_index_grid' class="grid"></div>
         <div id='pie_grid' class="grid"></div>
+        <div id='line_chart_grid' class="grid"></div>
     </div>
     <script src="scripts/Observer.js"></script>
     <script src="scripts/example.js"></script>
     <script src="scripts/Map.js"></script>
 	<script src="scripts/pie_part.js"></script>
     <script src="scripts/happy_index.js"></script>
-	<script src="scripts/debug.js"></script>
+    <script src="scripts/debug.js"></script>
+    <script src="scripts/line_chart.js"></script>
     <script>
         let OM = new ObserverManagement();
         debug(OM);
         map_main(OM);
-        example2(OM);
+        // example2(OM);
         happy_index_main(OM);
+        line_chart_main(OM);
         pie_main(OM);
     </script>
 </body>
