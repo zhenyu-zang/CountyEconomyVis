@@ -61,7 +61,6 @@ function draw_line_chart(div_id, keys, key2data) {
 			{
 				name: keys[key_id],
 				type: 'line',
-				stack: '总量',
 				data:cur_key_data
 			}
 		)
@@ -93,6 +92,13 @@ function draw_line_chart(div_id, keys, key2data) {
             legend: {
 				data: keys,
 				top: '10%'
+			},
+			grid: {
+				left: '3%',
+				right: '4%',
+				bottom: '3%',
+				top: '20%',
+				containLabel: true
 			},
 			
 		    series: selected_series,
