@@ -255,13 +255,21 @@ class MapState {
     return geojson;
   }
 
+  tooltip_html(properties) {
+    var html = '';
+    for (const [key, value] of Object.entries(properties)){
+      html += `${key}: ${value}<br />`
+    }
+    return html;
+  }
+
   add_tooltip = () => {
     const tooltip = this.tooltip;
     this.svg.selectAll("path.region")
-      .on("mouseover", function(d) {
+      .on("mouseover", (d) => {
         const event = d3.event;
         tooltip
-          .html(properties2html(d.properties))  
+          .html(this.tooltip_html(d.properties))
           .transition()
           .duration(__CONFIG__.duration)
           .style("opacity", __CONFIG__.tooltip_opacity)
@@ -301,18 +309,32 @@ class MapState {
         .catch(e => console.log(e));
     }
   }
-}
 
-function properties2html(properties) {
-  var html = ''
-  for (const [key, value] of Object.entries(properties)){
-    html += `${key}: ${value}<br />`
+  render_time_slider() {
+    const years = d3.range(0, 17)
+      .map(d => new Date(1997+d, 1, 1));
+    this.time_slider = d3
+      .sliderBottom()
+        .min(d3.min(years))
+        .max(d3.max(years))
+        .step(1000*60*60*24*365)
+        .width(300)
+        .tickFormat(d3.timeFormat('%Y'))
+        .tickValues(years.filter((d, i) => i % 2 == 0))
+        .default(new Date(1997, 1, 1))
+        .on("onchange", val => {
+          this.OM.publish("year_update", val.getFullYear());
+        })
+    this.svg
+      .append('g')
+        .classed('time-slider', true)
+        .call(this.time_slider);
   }
-  return html;
 }
 
 async function map_main(OM) {
   const state = new MapState(OM);
   await state.init();
   state.render(state.adcode);
+  state.render_time_slider();
 }
