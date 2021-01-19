@@ -142,8 +142,8 @@ class MapState {
   async get_single_geojson(adcode) {
     if (adcode in this.single_geojsons)
       return this.single_geojsons[adcode];
-
-    const geojson = await this.get_geojson();
+    const parent_adcode = this.parents[adcode];
+    const geojson = await this.get_geojson(parent_adcode);
     for (let feature of geojson.features) {
       if (feature.properties.adcode == adcode) {
         this.single_geojsons[adcode] = feature;
@@ -173,9 +173,9 @@ class MapState {
 
   handle_select = async (adcode) => {
     const i = this.selected.indexOf(adcode);
-    if (i >= 0)
+    if (i >= 0)   // Delete adcode from this.selected
       this.selected.splice(i, 1);
-    else
+    else          // Add adcode to this.selected
       this.selected.push(adcode);
 
     await this.get_single_geojson(adcode);
@@ -337,4 +337,5 @@ async function map_main(OM) {
   await state.init();
   state.render(state.adcode);
   state.render_time_slider();
+  return state;
 }

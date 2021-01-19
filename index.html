@@ -44,11 +44,15 @@
     <script>
         let OM = new ObserverManagement();
         debug(OM);
-        map_main(OM);
-        // example2(OM);
+        let map_promise = map_main(OM);
         happy_index_main(OM);
         line_chart_main(OM);
         pie_main(OM);
+        map_promise.then(async map => {
+            await map.handle_select("110115");
+            await map.handle_select("110116");
+            await map.handle_select("110117");
+        });
     </script>
 </body>
 </html>
