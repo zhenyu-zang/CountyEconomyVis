@@ -127,6 +127,7 @@ function flush_line_chart() {
 		{
 			if (line_global_data[idx]['区县']==line_selected_keys[i]) 
 			{
+				// console.log(line_global_data[idx]);
 				tmp_data[line_selected_keys[i]][line_global_data[idx]['年份']]=line_global_data[idx][line_selected_attr];
 			}
 		}
@@ -140,7 +141,7 @@ function line_chart_key_update(key) {
 }
 
 
-function line_chart_attr_update(attr) {
+function updateAttr(attr) {
 	line_selected_attr = attr;
 	flush_line_chart();
 }
@@ -150,13 +151,26 @@ function line_chart_main(OM) {
 		data.splice(0,1);
 		line_global_data = data;
 		let div = d3.select('#line_chart_grid');
+
+		d3.select('#opts')
+		.on('change', function(){
+			var newAttr = String(d3.select(this).property('value'));
+			updateAttr(newAttr);
+		}
+		)
+		// let list = div
+		// .append('select')
+		// .attr('id', 'cputurbocheck');
+		// let op = list
+		// .append('option')
 		let fig = div
 		.append('div')
 		.attr('id', 'line_chart')
 		.attr('style', 'width:100%;height:100%;');
+
 		flush_line_chart();
 		OM.subscribe('key_update', line_chart_key_update);
-		OM.subscribe('attr_update', line_chart_attr_update);
+		// OM.subscribe('attr_update', line_chart_attr_update);
 	});
 }
  
