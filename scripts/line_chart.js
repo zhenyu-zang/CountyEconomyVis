@@ -9,7 +9,7 @@ var line_global_data;
 
 
 function draw_line_chart(div_id, keys, key2data) {
-	console.log('--------------- drawing line chart')
+	// console.log('--------------- drawing line chart')
 	// keys: all keys (list)
 	// : correspond data (including all attrs)
 	var myChart = echarts.init(document.getElementById(div_id));
@@ -66,7 +66,7 @@ function draw_line_chart(div_id, keys, key2data) {
 		)
 	}
 
-	console.log(key2data)
+	// console.log(key2data)
 	var option = {
             title: titles,
             tooltip: {
@@ -156,7 +156,7 @@ function line_chart_main(OM) {
 		.attr('style', 'width:100%;height:100%;');
 		flush_line_chart();
 		OM.subscribe('key_update', line_chart_key_update);
-		OM.subscribe('year_update', line_chart_attr_update);
+		OM.subscribe('attr_update', line_chart_attr_update);
 	});
 }
  
