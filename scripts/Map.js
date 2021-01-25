@@ -13,6 +13,7 @@ function select_main(config=__CONFIG__) {
 class MapState {
   adcode = "100000";
   selected = [];
+  adcode_with_data = {};
   geojsons = {};
   single_geojsons = {};
   parents = {};
@@ -58,8 +59,6 @@ class MapState {
     const csv = d3.csv('data/data.csv')
       .then(data => {
         data.splice(0,1);
-        // this.csv = data;
-        this.adcode_with_data = {};
 
         const proc = (entry) => {
           const adcode = entry.区县行政区划码;
@@ -83,7 +82,7 @@ class MapState {
             this.adcode_with_data[adcode] = {区县: adname};
           this.adcode_with_data[adcode][year] = value;
         }
-      });
+      }).catch(e => console.log(e));
     const json = d3.json('data/geojson/geojson.parents.json')
       .then(data => {
         this.parents = data;
